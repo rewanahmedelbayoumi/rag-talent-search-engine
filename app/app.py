@@ -8,11 +8,14 @@ import streamlit as st
 from sentence_transformers import SentenceTransformer
 
 
+# =========================================================
+# PROJECT PATH
+# =========================================================
+
 project_root = Path(__file__).resolve().parent.parent
 
 if str(project_root) not in sys.path:
     sys.path.append(str(project_root))
-
 
 from src.llm_evaluator import evaluate_candidates, bias_check
 
@@ -22,8 +25,8 @@ from src.llm_evaluator import evaluate_candidates, bias_check
 # =========================================================
 
 st.set_page_config(
-    page_title="TalentIQ — AI Talent Search",
-    page_icon="◼",
+    page_title="TalentIQ",
+    page_icon="🔎",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -38,39 +41,19 @@ st.markdown(
     <style>
 
     .stApp {
-        background:
-            radial-gradient(
-                circle at top right,
-                rgba(37, 99, 235, 0.10),
-                transparent 28%
-            ),
-            radial-gradient(
-                circle at bottom left,
-                rgba(99, 102, 241, 0.08),
-                transparent 30%
-            ),
-            #07111f;
-
+        background-color: #07111f;
         color: #f8fafc;
     }
 
     .block-container {
+        max-width: 1400px;
         padding-top: 2rem;
         padding-bottom: 4rem;
-        max-width: 1500px;
     }
 
     [data-testid="stSidebar"] {
-        background: #0b1626;
-        border-right: 1px solid rgba(255,255,255,0.08);
-    }
-
-    [data-testid="stSidebar"] * {
-        color: #e2e8f0;
-    }
-
-    h1, h2, h3 {
-        font-family: Inter, Arial, sans-serif;
+        background-color: #0b1626;
+        border-right: 1px solid #172033;
     }
 
     #MainMenu {
@@ -85,249 +68,180 @@ st.markdown(
         background: transparent !important;
     }
 
-    .hero {
-        padding: 2rem 0 1.5rem 0;
+    .brand {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 0.2rem;
+    }
+
+    .brand-subtitle {
+        color: #64748b;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 2rem;
     }
 
     .eyebrow {
         display: inline-block;
-        padding: 0.4rem 0.8rem;
+        padding: 0.4rem 0.75rem;
+        background: #102755;
+        border: 1px solid #1e3a8a;
         border-radius: 999px;
-        background: rgba(37, 99, 235, 0.14);
-        border: 1px solid rgba(96, 165, 250, 0.25);
         color: #93c5fd;
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         font-weight: 700;
         letter-spacing: 0.08em;
-        text-transform: uppercase;
         margin-bottom: 1rem;
     }
 
     .hero-title {
-        font-size: 3.3rem;
-        line-height: 1.05;
+        color: #ffffff;
+        font-size: 3.2rem;
+        line-height: 1.08;
         font-weight: 800;
+        letter-spacing: -0.03em;
         margin-bottom: 0.8rem;
-        color: #f8fafc;
     }
 
-    .hero-subtitle {
-        max-width: 850px;
-        font-size: 1.08rem;
+    .hero-description {
         color: #94a3b8;
+        max-width: 780px;
+        font-size: 1.05rem;
         line-height: 1.7;
+        margin-bottom: 2rem;
     }
 
-    .stTextArea textarea {
-        background: #0f1b2d !important;
-        color: #f8fafc !important;
-        border: 1px solid #24354d !important;
-        border-radius: 14px !important;
-        min-height: 150px;
-        font-size: 1rem;
-    }
-
-    .stTextArea textarea:focus {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 1px #3b82f6 !important;
-    }
-
-    .stButton > button {
-        width: 100%;
-        min-height: 52px;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 0.98rem;
-        color: white;
-
-        background:
-            linear-gradient(
-                135deg,
-                #2563eb,
-                #4f46e5
-            );
-
-        transition: 0.2s ease;
-    }
-
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow:
-            0 10px 24px
-            rgba(37, 99, 235, 0.28);
-    }
-
-    .metric-card {
-        background: rgba(15, 23, 42, 0.82);
-        border: 1px solid rgba(148, 163, 184, 0.12);
+    .metric-box {
+        background: #0d1829;
+        border: 1px solid #1d2a3e;
         border-radius: 16px;
-        padding: 1rem 1.1rem;
-        height: 100%;
+        padding: 1.2rem;
+        min-height: 110px;
     }
 
     .metric-label {
         color: #64748b;
-        font-size: 0.76rem;
-        text-transform: uppercase;
+        font-size: 0.72rem;
         font-weight: 700;
         letter-spacing: 0.08em;
-    }
-
-    .metric-value {
-        font-size: 1.7rem;
-        font-weight: 800;
-        color: #f8fafc;
-        margin-top: 0.25rem;
-    }
-
-    .candidate-card {
-        background:
-            linear-gradient(
-                180deg,
-                rgba(15, 23, 42, 0.96),
-                rgba(10, 18, 31, 0.96)
-            );
-
-        border: 1px solid rgba(148, 163, 184, 0.12);
-        border-radius: 20px;
-        padding: 1.25rem 1.3rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.16);
-    }
-
-    .candidate-card-top {
-        border-color: rgba(59, 130, 246, 0.55);
-        box-shadow:
-            0 16px 50px
-            rgba(37,99,235,0.13);
-    }
-
-    .candidate-rank {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: #172554;
-        color: #bfdbfe;
-        font-weight: 800;
-        margin-right: 0.7rem;
-    }
-
-    .candidate-id {
-        font-size: 1.15rem;
-        font-weight: 800;
-        color: #f8fafc;
-    }
-
-    .category-chip {
-        display: inline-block;
-        padding: 0.34rem 0.72rem;
-        border-radius: 999px;
-        background: rgba(30, 64, 175, 0.2);
-        color: #93c5fd;
-        border: 1px solid rgba(59, 130, 246, 0.18);
-        font-size: 0.78rem;
-        font-weight: 700;
-        margin-top: 0.65rem;
-    }
-
-    .distance-label {
-        color: #64748b;
-        font-size: 0.76rem;
         text-transform: uppercase;
-        font-weight: 700;
-        margin-top: 1rem;
     }
 
-    .distance-value {
-        color: #cbd5e1;
-        font-weight: 700;
+    .metric-number {
+        color: #ffffff;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-top: 0.35rem;
     }
 
-    .section-title {
+    .section-heading {
+        color: #ffffff;
         font-size: 1.5rem;
         font-weight: 800;
-        color: #f8fafc;
-        margin: 2rem 0 1rem 0;
-    }
-
-    .section-subtitle {
-        color: #64748b;
-        margin-top: -0.7rem;
-        margin-bottom: 1.2rem;
-    }
-
-    .ai-panel {
-        background:
-            linear-gradient(
-                135deg,
-                rgba(30, 64, 175, 0.18),
-                rgba(79, 70, 229, 0.10)
-            );
-
-        border:
-            1px solid
-            rgba(96, 165, 250, 0.22);
-
-        border-radius: 20px;
-        padding: 1.4rem 1.5rem;
-        margin-top: 1rem;
-    }
-
-    .bias-panel {
-        background:
-            linear-gradient(
-                135deg,
-                rgba(15, 118, 110, 0.15),
-                rgba(6, 78, 59, 0.08)
-            );
-
-        border:
-            1px solid
-            rgba(45, 212, 191, 0.18);
-
-        border-radius: 20px;
-        padding: 1.4rem 1.5rem;
-        margin-top: 1rem;
-    }
-
-    .sidebar-brand {
-        font-size: 1.4rem;
-        font-weight: 800;
-        color: #f8fafc;
+        margin-top: 2rem;
         margin-bottom: 0.25rem;
     }
 
-    .sidebar-caption {
+    .section-description {
         color: #64748b;
-        font-size: 0.85rem;
-        line-height: 1.5;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
-    .sidebar-section {
-        color: #94a3b8;
+    .candidate-card {
+        background: #0d1829;
+        border: 1px solid #1d2a3e;
+        border-radius: 18px;
+        padding: 1.2rem 1.3rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .candidate-card.best {
+        border: 1px solid #2563eb;
+        background: #0e1c33;
+    }
+
+    .rank-badge {
+        display: inline-block;
+        background: #172554;
+        color: #bfdbfe;
+        border-radius: 8px;
+        padding: 0.35rem 0.55rem;
+        font-weight: 800;
+        margin-right: 0.5rem;
+    }
+
+    .candidate-title {
+        color: #ffffff;
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .category {
+        display: inline-block;
+        margin-top: 0.7rem;
+        padding: 0.3rem 0.65rem;
+        background: #102755;
+        color: #93c5fd;
+        border-radius: 999px;
         font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
         font-weight: 700;
-        margin: 1rem 0 0.6rem 0;
+    }
+
+    .distance {
+        color: #64748b;
+        font-size: 0.82rem;
+        margin-top: 0.8rem;
+    }
+
+    .best-label {
+        color: #60a5fa;
+        font-size: 0.72rem;
+        font-weight: 800;
+        margin-left: 0.5rem;
+    }
+
+    .stTextArea textarea {
+        background-color: #0d1829 !important;
+        border: 1px solid #24334a !important;
+        border-radius: 14px !important;
+        color: #ffffff !important;
+        min-height: 150px;
+    }
+
+    .stTextArea textarea:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 1px #2563eb !important;
+    }
+
+    .stButton > button {
+        width: 100%;
+        min-height: 50px;
+        border: none;
+        border-radius: 12px;
+        background: #2563eb;
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .stButton > button:hover {
+        background: #1d4ed8;
+        color: white;
+        border: none;
     }
 
     [data-testid="stExpander"] {
-        background: rgba(15, 23, 42, 0.65);
-        border: 1px solid rgba(148, 163, 184, 0.10);
-        border-radius: 14px;
+        background-color: #0a1422;
+        border: 1px solid #1d2a3e;
+        border-radius: 12px;
     }
 
-    .footer-note {
-        margin-top: 3rem;
+    .footer {
         color: #475569;
         text-align: center;
         font-size: 0.78rem;
+        padding-top: 3rem;
     }
 
     </style>
@@ -337,31 +251,32 @@ st.markdown(
 
 
 # =========================================================
-# LOAD DATA + MODELS
+# LOAD MODEL
 # =========================================================
 
 @st.cache_resource
 def load_embedding_model():
-    return SentenceTransformer(
-        "all-MiniLM-L6-v2"
-    )
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
+
+# =========================================================
+# LOAD FAISS
+# =========================================================
 
 @st.cache_resource
 def load_faiss_index():
-    index_path = (
-        project_root
-        / "vector_db"
-        / "resume_index.faiss"
-    )
+    index_path = project_root / "vector_db" / "resume_index.faiss"
 
-    return faiss.read_index(
-        str(index_path)
-    )
+    return faiss.read_index(str(index_path))
 
+
+# =========================================================
+# LOAD DATASET
+# =========================================================
 
 @st.cache_data
 def load_resume_data():
+
     csv_path = (
         project_root
         / "data"
@@ -391,12 +306,10 @@ def load_resume_data():
 
     rag_df = rag_df[
         rag_df["resume_text"]
-        .str
-        .strip()
+        .astype(str)
+        .str.strip()
         != ""
-    ].reset_index(
-        drop=True
-    )
+    ].reset_index(drop=True)
 
     rag_df["clean_resume"] = (
         rag_df["resume_text"]
@@ -418,29 +331,23 @@ rag_df = load_resume_data()
 
 
 # =========================================================
-# SEARCH LOGIC
+# SEARCH FUNCTION
 # =========================================================
 
-def search_resumes(
-    query,
-    top_k=5
-):
-    query_embedding = (
-        embedding_model.encode(
-            [query]
-        )
+def search_resumes(query, top_k=5):
+
+    query_embedding = embedding_model.encode(
+        [query]
     )
 
-    query_embedding = np.array(
+    query_embedding = np.asarray(
         query_embedding,
         dtype="float32"
     )
 
-    distances, indices = (
-        index.search(
-            query_embedding,
-            top_k
-        )
+    distances, indices = index.search(
+        query_embedding,
+        top_k
     )
 
     results = []
@@ -448,6 +355,7 @@ def search_resumes(
     for rank, resume_index in enumerate(
         indices[0]
     ):
+
         candidate = rag_df.iloc[
             resume_index
         ]
@@ -460,9 +368,7 @@ def search_resumes(
                 "distance": float(
                     distances[0][rank]
                 ),
-                "resume": candidate[
-                    "clean_resume"
-                ]
+                "resume": candidate["clean_resume"]
             }
         )
 
@@ -477,26 +383,19 @@ with st.sidebar:
 
     st.markdown(
         """
-        <div class="sidebar-brand">
+        <div class="brand">
             TalentIQ
         </div>
 
-        <div class="sidebar-caption">
-            AI-powered semantic talent discovery
-            for modern recruiting teams.
+        <div class="brand-subtitle">
+            Semantic AI talent discovery platform
+            powered by RAG.
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    st.markdown(
-        """
-        <div class="sidebar-section">
-            Search Settings
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.subheader("Search Settings")
 
     top_k = st.slider(
         "Candidates to retrieve",
@@ -505,41 +404,29 @@ with st.sidebar:
         value=5
     )
 
-    st.markdown(
-        """
-        <div class="sidebar-section">
-            System
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.divider()
+
+    st.subheader("System Status")
+
+    st.success(
+        "FAISS Vector Index"
     )
 
     st.success(
-        "FAISS index connected"
+        "Gemini Evaluation"
     )
 
-    st.info(
-        "Gemini evaluation enabled"
+    st.success(
+        "Bias Audit"
     )
 
-    st.markdown(
-        """
-        <div class="sidebar-section">
-            Dataset
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.divider()
 
-    st.write(
-        f"{len(rag_df):,} resumes indexed"
-    )
+    st.subheader("Dataset")
 
-    st.markdown("---")
-
-    st.caption(
-        "Semantic retrieval powered by "
-        "Sentence Transformers + FAISS."
+    st.metric(
+        "Indexed resumes",
+        f"{len(rag_df):,}"
     )
 
 
@@ -549,24 +436,21 @@ with st.sidebar:
 
 st.markdown(
     """
-    <div class="hero">
+    <div class="eyebrow">
+        AI RECRUITMENT INTELLIGENCE
+    </div>
 
-        <div class="eyebrow">
-            AI Recruitment Intelligence
-        </div>
+    <div class="hero-title">
+        Find talent by meaning,<br>
+        not just keywords.
+    </div>
 
-        <div class="hero-title">
-            Find the right talent<br>
-            beyond keyword matching.
-        </div>
-
-        <div class="hero-subtitle">
-            TalentIQ uses semantic search and
-            large language model evaluation to
-            surface candidates based on actual
-            skills, experience, and contextual fit.
-        </div>
-
+    <div class="hero-description">
+        TalentIQ combines semantic search,
+        vector retrieval and large language
+        model evaluation to discover candidates
+        whose experience matches your hiring
+        requirements.
     </div>
     """,
     unsafe_allow_html=True
@@ -577,19 +461,19 @@ st.markdown(
 # METRICS
 # =========================================================
 
-m1, m2, m3 = st.columns(3)
+col1, col2, col3 = st.columns(3)
 
-with m1:
+with col1:
 
     st.markdown(
         f"""
-        <div class="metric-card">
+        <div class="metric-box">
 
             <div class="metric-label">
                 Indexed Resumes
             </div>
 
-            <div class="metric-value">
+            <div class="metric-number">
                 {len(rag_df):,}
             </div>
 
@@ -599,17 +483,17 @@ with m1:
     )
 
 
-with m2:
+with col2:
 
     st.markdown(
         f"""
-        <div class="metric-card">
+        <div class="metric-box">
 
             <div class="metric-label">
-                Embedding Dimension
+                Vector Dimension
             </div>
 
-            <div class="metric-value">
+            <div class="metric-number">
                 {index.d}
             </div>
 
@@ -619,18 +503,18 @@ with m2:
     )
 
 
-with m3:
+with col3:
 
     st.markdown(
         """
-        <div class="metric-card">
+        <div class="metric-box">
 
             <div class="metric-label">
-                AI Evaluation
+                Retrieval Engine
             </div>
 
-            <div class="metric-value">
-                Gemini
+            <div class="metric-number">
+                FAISS
             </div>
 
         </div>
@@ -640,23 +524,18 @@ with m3:
 
 
 # =========================================================
-# SEARCH
+# SEARCH AREA
 # =========================================================
 
 st.markdown(
     """
-    <div class="section-title">
+    <div class="section-heading">
         Talent Search
     </div>
-    """,
-    unsafe_allow_html=True
-)
 
-st.markdown(
-    """
-    <div class="section-subtitle">
-        Describe the ideal candidate
-        using natural language.
+    <div class="section-description">
+        Describe the candidate profile,
+        skills and experience you are looking for.
     </div>
     """,
     unsafe_allow_html=True
@@ -667,17 +546,16 @@ query = st.text_area(
     "Candidate requirements",
     placeholder=(
         "Example: Find me a data analyst "
-        "with strong Python, SQL, machine "
-        "learning, Tableau, and experience "
-        "communicating insights to business "
-        "stakeholders."
+        "with Python, SQL, Tableau, machine "
+        "learning and business intelligence "
+        "experience."
     ),
     label_visibility="collapsed"
 )
 
 
-search_button = st.button(
-    "Search Talent",
+search_clicked = st.button(
+    "Search Candidates",
     use_container_width=True
 )
 
@@ -686,41 +564,41 @@ search_button = st.button(
 # RESULTS
 # =========================================================
 
-if search_button:
+if search_clicked:
 
     if not query.strip():
 
         st.warning(
-            "Enter a candidate description "
-            "before starting the search."
+            "Please describe the candidate "
+            "you are looking for."
         )
 
     else:
 
         with st.spinner(
-            "Searching semantic talent index..."
+            "Searching the talent index..."
         ):
 
             results = search_resumes(
-                query=query,
-                top_k=top_k
+                query,
+                top_k
             )
 
 
-        st.markdown(
-            """
-            <div class="section-title">
-                Top Candidates
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        # =================================================
+        # CANDIDATES
+        # =================================================
 
         st.markdown(
             """
-            <div class="section-subtitle">
-                Candidates ranked by semantic
-                similarity to your search.
+            <div class="section-heading">
+                Top Candidates
+            </div>
+
+            <div class="section-description">
+                Ranked using semantic similarity
+                between your request and the
+                candidate resumes.
             </div>
             """,
             unsafe_allow_html=True
@@ -729,52 +607,42 @@ if search_button:
 
         for result in results:
 
-            if result["rank"] == 1:
+            best_class = (
+                "best"
+                if result["rank"] == 1
+                else ""
+            )
 
-                card_class = (
-                    "candidate-card "
-                    "candidate-card-top"
-                )
-
-                top_label = (
-                    " • BEST SEMANTIC MATCH"
-                )
-
-            else:
-
-                card_class = (
-                    "candidate-card"
-                )
-
-                top_label = ""
-
+            best_label = (
+                '<span class="best-label">'
+                'BEST MATCH'
+                '</span>'
+                if result["rank"] == 1
+                else ""
+            )
 
             st.markdown(
                 f"""
-                <div class="{card_class}">
+                <div class="candidate-card {best_class}">
 
-                    <div>
+                    <span class="rank-badge">
+                        #{result['rank']}
+                    </span>
 
-                        <span class="candidate-rank">
-                            #{result['rank']}
-                        </span>
+                    <span class="candidate-title">
+                        Candidate {result['id']}
+                    </span>
 
-                        <span class="candidate-id">
-                            Candidate {result['id']}
-                            {top_label}
-                        </span>
+                    {best_label}
 
-                    </div>
+                    <br>
 
-                    <div class="category-chip">
+                    <span class="category">
                         {result['category']}
-                    </div>
+                    </span>
 
-                    <div class="distance-label">
-                        FAISS Distance
-                    </div>
-
-                    <div class="distance-value">
+                    <div class="distance">
+                        Vector distance:
                         {result['distance']:.4f}
                     </div>
 
@@ -783,10 +651,8 @@ if search_button:
                 unsafe_allow_html=True
             )
 
-
             with st.expander(
-                f"View Candidate "
-                f"{result['id']} Resume"
+                f"View Candidate {result['id']} Resume"
             ):
 
                 st.write(
@@ -794,26 +660,20 @@ if search_button:
                 )
 
 
-        # =============================================
-        # LLM CANDIDATE EVALUATION
-        # =============================================
+        # =================================================
+        # GEMINI EVALUATION
+        # =================================================
 
         st.markdown(
             """
-            <div class="section-title">
-                AI Candidate Intelligence
+            <div class="section-heading">
+                AI Candidate Evaluation
             </div>
-            """,
-            unsafe_allow_html=True
-        )
 
-        st.markdown(
-            """
-            <div class="section-subtitle">
+            <div class="section-description">
                 Gemini evaluates the three
-                strongest retrieved candidates
-                against the original hiring
-                requirements.
+                strongest candidates against
+                the hiring requirements.
             </div>
             """,
             unsafe_allow_html=True
@@ -821,8 +681,7 @@ if search_button:
 
 
         with st.spinner(
-            "Evaluating candidate fit "
-            "with Gemini..."
+            "Gemini is evaluating candidate fit..."
         ):
 
             evaluation = evaluate_candidates(
@@ -831,43 +690,23 @@ if search_button:
             )
 
 
-        st.markdown(
-            """
-            <div class="ai-panel">
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            evaluation
-        )
-
-        st.markdown(
-            "</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown(evaluation)
 
 
-        # =============================================
+        # =================================================
         # BIAS CHECK
-        # =============================================
+        # =================================================
 
         st.markdown(
             """
-            <div class="section-title">
+            <div class="section-heading">
                 Bias & Fairness Audit
             </div>
-            """,
-            unsafe_allow_html=True
-        )
 
-        st.markdown(
-            """
-            <div class="section-subtitle">
-                A second AI review checks whether
-                the recommendation is based on
-                job-relevant qualifications rather
-                than sensitive demographic factors.
+            <div class="section-description">
+                The recommendation is reviewed
+                for possible reliance on sensitive
+                demographic characteristics.
             </div>
             """,
             unsafe_allow_html=True
@@ -875,7 +714,7 @@ if search_button:
 
 
         with st.spinner(
-            "Running bias and fairness audit..."
+            "Running fairness audit..."
         ):
 
             bias_report = bias_check(
@@ -885,21 +724,7 @@ if search_button:
             )
 
 
-        st.markdown(
-            """
-            <div class="bias-panel">
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            bias_report
-        )
-
-        st.markdown(
-            "</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown(bias_report)
 
 
 # =========================================================
@@ -908,11 +733,9 @@ if search_button:
 
 st.markdown(
     """
-    <div class="footer-note">
-
-        TalentIQ • RAG-powered talent discovery
-        using Sentence Transformers, FAISS and Gemini
-
+    <div class="footer">
+        TalentIQ · Semantic Search · FAISS ·
+        Sentence Transformers · Gemini
     </div>
     """,
     unsafe_allow_html=True
