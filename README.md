@@ -453,25 +453,7 @@ Its recommendations should be treated as decision-support information rather tha
 
 Human review should remain part of any real recruitment process.
 
-## Screenshots
 
-Screenshots of the TalentIQ dashboard, semantic search results, Gemini candidate evaluation, and bias audit can be added inside:
-
-```text
-images/
-```
-
-Example:
-
-```md
-![TalentIQ Dashboard](images/dashboard.png)
-
-![Candidate Search Results](images/candidates.png)
-
-![AI Candidate Evaluation](images/evaluation.png)
-
-![Bias Audit](images/bias-audit.png)
-```
 
 ## Final Pipeline
 
